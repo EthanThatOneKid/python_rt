@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# TODO: Copy files.
+# https://discord.com/channels/1142910039674339478/1196624978016227399/1204134726898557010
+
 # class Sphere:
 #   def __init__(self, center=(0.0, 0.0, 0.0), radius=1.0, ambient=(0.1, 0.0, 0.0), diffuse=(0.7, 0.0, 0.0), specular=(1, 1, 1), shininess=100, reflection=0.5):
 #       self.center = np.array(list(center))
