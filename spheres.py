@@ -7,6 +7,7 @@ class Spheres:
         Sphere(center=(1.2, 0, -1), radius=0.7, diffuse=(0, 0, 0.7)),
         Sphere(center=( -1.6, 0, -1), radius=0.7, diffuse=(0.7, 0.7, 0)),
 
+        # Floor?
         Sphere(center=(9, -9000, 0), radius = 9000 - 0.7, ambient=(0.1, 0.1, 0.1))
     ]
 
