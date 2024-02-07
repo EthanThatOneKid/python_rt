@@ -1,23 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-# TODO: Copy files.
-# https://discord.com/channels/1142910039674339478/1196624978016227399/1204134726898557010
-
-# class Sphere:
-#   def __init__(self, center=(0.0, 0.0, 0.0), radius=1.0, ambient=(0.1, 0.0, 0.0), diffuse=(0.7, 0.0, 0.0), specular=(1, 1, 1), shininess=100, reflection=0.5):
-#       self.center = np.array(list(center))
-#       self.radius = radius
-#       self.ambient = np.array(list(ambient)) 
-#       self.diffuse = np.array(list(diffuse)) 
-#       self.specular = np.array(list(specular)) 
-#       self.shininess = shininess 
-#       self.reflection = reflection 
-
-#   def __str__(self): pass 
-
-#   @staticmethod 
-#   def run_tests(): pass
+import sys
+from sphere import Sphere 
+from light import Light 
+from spheres import Spheres
 
 
 def normalize(vector): return vector / np.linalg.norm(vector)
@@ -38,54 +24,39 @@ def sphere_intersect(center, radius, ray_origin, ray_direction):
     return None
 
 
-def nearest_intersected_object(objects, ray_origin, ray_direction):
-    li = [1, 2, 3, 4]
-    li2 = []
-    for i in range(1, 5):
-        li2.append(i)
-
-    li3 = [(x, x * x) for x in range(1, 5)]
-                                #   obj.center,    obj.radius, 
-    distances = [sphere_intersect(obj['center'], obj['radius'], ray_origin, ray_direction) for obj in objects]
+def nearest_intersected_object(objects, ray_origin, ray_direction):     # next line is a list comprehension -- LEARN THIS
+    distances = [sphere_intersect(obj.center, obj.radius, ray_origin, ray_direction) for obj in objects]
     nearest_object = None
     min_distance = np.inf
     for index, distance in enumerate(distances):
         if distance and distance < min_distance:
             min_distance = distance
             nearest_object = objects[index]
-    return nearest_object, min_distance
+    return nearest_object, min_distance      # returns a tuple
 
 
-def ray_trace(width=300, height=400):
-  # width = 300
-  # height = 200
+def show_plot_image(image, width, height):
+  plt.imshow(image, extent=[0, width, 0, height])
+  plt.title(file, fontweight="bold")
+  plt.axis('off')
+  plt.tight_layout()
+  plt.show()
 
+
+def ray_trace(file, width=300, height=200):
   max_depth = 3
 
   camera = np.array([0, 0, 1])
   ratio = float(width) / height
   screen = (-1, 1 / ratio, 1, -1 / ratio) # left, top, right, bottom
 
-  light = { 'position': np.array([5, 5, 5]), 'ambient': np.array([1, 1, 1]), 'diffuse': np.array([1, 1, 1]), 'specular': np.array([1, 1, 1]) }
+  light = Light(position=(5, 5, 5))
 
-
-#   objects2 = [ 
-#     Sphere(center=(-0.2, 0, -1), radius=0.7,  diffuse=(0.7, 0.0, 0)),   # keyword args (named parameters)
-#     Sphere(center=(-1.6, 0, -1), radius=0.7,  diffuse=(0, 0.0, 0.7)),
-#     Sphere(center=(0.1, -0.3, 0), radius=0.1,  diffuse=(0.7, 0.0, 0.7), shininess=0, reflection=0.0)
-#   ]
-
-  objects = [
-      { 'center': np.array([-0.2, 0, -1]), 'radius': 0.7, 'ambient': np.array([0.1, 0, 0]), 'diffuse': np.array([0.7, 0, 0]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0.5 },
-
-      { 'center': np.array([-1.6, 0, -1]), 'radius': 0.7, 'ambient': np.array([0.1, 0, 0]), 'diffuse': np.array([0, 0, 0.7]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0.5 },
-
-      { 'center': np.array([0.1, -0.3, 0]), 'radius': 0.1, 'ambient': np.array([0.1, 0, 0.1]), 'diffuse': np.array([0.7, 0, 0.7]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0.5 },
-      { 'center': np.array([-0.3, 0, 0]), 'radius': 0.15, 'ambient': np.array([0, 0.1, 0]), 'diffuse': np.array([0, 0.6, 0]), 'specular': np.array([1, 1, 1]), 'shininess': 100, 'reflection': 0.5 },
-  ]
+  objects = Spheres.get_spheres()       # student supplies file spheres.py
 
   image = np.zeros((height, width, 3))
-  print(f'{height} lines...', end=' ', flush=True)
+  print(f'creating file: {file} with {height} lines... ', end=' ', flush=True)
+
   for i, y in enumerate(np.linspace(screen[1], screen[3], height)):
       for j, x in enumerate(np.linspace(screen[0], screen[2], width)):
           # screen is on origin
@@ -96,19 +67,20 @@ def ray_trace(width=300, height=400):
           color = np.zeros((3))
           reflection = 1
 
-          for k in range(max_depth):
+          for _ in range(max_depth):      # not accessing loop variable, use _ to indicate this
               # check for intersections
               nearest_object, min_distance = nearest_intersected_object(objects, origin, direction)
-              if nearest_object is None:
+              
+              if nearest_object is None:  
                   break
 
               intersection = origin + min_distance * direction
-              normal_to_surface = normalize(intersection - nearest_object['center'])
+              normal_to_surface = normalize(intersection - nearest_object.center)
               shifted_point = intersection + 1e-5 * normal_to_surface
-              intersection_to_light = normalize(light['position'] - shifted_point)
+              intersection_to_light = normalize(light.position - shifted_point)
 
               _, min_distance = nearest_intersected_object(objects, shifted_point, intersection_to_light)
-              intersection_to_light_distance = np.linalg.norm(light['position'] - intersection)
+              intersection_to_light_distance = np.linalg.norm(light.position - intersection)
               is_shadowed = min_distance < intersection_to_light_distance
 
               if is_shadowed:
@@ -116,42 +88,48 @@ def ray_trace(width=300, height=400):
 
               illumination = np.zeros((3))
 
-              # ambient
-              illumination += nearest_object['ambient'] * light['ambient']
-
-              # diffuse
-              illumination += nearest_object['diffuse'] * light['diffuse'] * np.dot(intersection_to_light, normal_to_surface)
+              # ambient       nearest_object.ambient    * light.ambient
+              illumination += nearest_object.ambient * light.ambient
+              
+              #diffuse
+              illumination += nearest_object.diffuse * light.diffuse * np.dot(intersection_to_light, normal_to_surface)
 
               # specular
               intersection_to_camera = normalize(camera - intersection)
               H = normalize(intersection_to_light + intersection_to_camera)
-              illumination += nearest_object['specular'] * light['specular'] * np.dot(normal_to_surface, H) ** (nearest_object['shininess'] / 4)
+              illumination += nearest_object.specular * light.specular * np.dot(normal_to_surface, H) ** (nearest_object.shininess / 4)
 
               # reflection
               color += reflection * illumination
-              reflection *= nearest_object['reflection']
+              reflection *= nearest_object.reflection
 
               origin = shifted_point
               direction = reflected(direction, normal_to_surface)
 
           image[i, j] = np.clip(color, 0, 1)
-      if (i + 1) % (height / 10) == 0: 
+      if (i + 1) % (height / 10) == 0:
         print(i + 1, end=' ', flush=True)
 
-  plt.imsave('image.png', image)
+  show_plot_image(image=image, width=width, height=height)
+  plt.imsave(file, image)
 
 
-def main():
-    # li = ['apple', 'blueberry', 'cherry', 'date']
-    # print(li)
-    # print(li[1])
-    # print(li[-1])
+def process_cmd_line_args():
+    file = sys.argv[1] if len(sys.argv) == 2 else ""     # argv[0] is the name of the program, argv[1] is the name of our imagefile 
+    if (len(file) == 0):
+        file = 'image.png'
+    elif len(file) > 0 and file.find(".") == -1:
+        file += ".png"
+    return file
 
-    # di = {'student': 3.99, 'other': 2.5}
-    # print(di)
-    # print(di['other'])
-    ray_trace(height=400)
+
+def main(file):
+    # print(f'filename is {file}')
+    ray_trace(file=file, height=200)
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+
+    file = process_cmd_line_args()
+    main(file)
