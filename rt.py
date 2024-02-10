@@ -124,7 +124,7 @@ def process_cmd_line_args():
 
 
 def main(file):
-    # print(f'filename is {file}')
+    print(f'filename is {file}')
     ray_trace(file=file, height=200)
 
 
